@@ -1,0 +1,5 @@
+dataset/
+raw_footage/
+ai-env/
+src/__pycache__/
+*.pyc
