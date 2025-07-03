@@ -9,18 +9,32 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import cv2
 from ultralytics import YOLO
+import time
+from datetime import datetime
 
 class WebcamFeed:
     def __init__(self, tk_label, width=960, height=540, cam_index=0):
+        
         self.cap = cv2.VideoCapture(cam_index)
         self.tk_label = tk_label
         self.width = width
         self.height = height
         self.running = False
+        
+        #Loading models
         self.classifier = joblib.load('../classification_models/random_forest_model.pkl')
         self.sc = joblib.load('../classification_models/X_scaler.pkl')
         self.extractor = xFeatures()
-        self.model = YOLO('yolov8n.pt') 
+        self.model = YOLO('yolov8n.pt')
+        
+        #Variables for determining if user distracted and for how long
+        self.distracted = False
+        self.phone_detected = False
+        
+        self.active_prediction = None
+        self.distracted_prediction_start_time = None
+
+        
     #Initialize camera
     def start(self):
         self.running = True
@@ -48,6 +62,20 @@ class WebcamFeed:
                 print("Prediction:", prediction)
             else:
                 prediction = None
+            
+            #Check if the user has been distracted for 5 or more seconds
+            if prediction is None or prediction[0] == 2:
+                if self.distracted_prediction_start_time is None:
+                    self.distracted_prediction_start_time = time.time()
+                    
+                elapsed_time = int(time.time() - self.distracted_prediction_start_time)
+                if elapsed_time >= 5:
+                    self.distracted = True
+                else:
+                    self.distracted = False
+            else:
+                self.distracted = False
+                self.distracted_prediction_start_time = None
                 
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = cv2.resize(frame, (self.width, self.height))
@@ -57,16 +85,22 @@ class WebcamFeed:
             for box in results.boxes:
                 classID = int(box.cls[0])
                 label = self.model.names[classID]
-                if label.lower() in ['cell phone', 'mobile phone', 'telephone']:
+                if label.lower() in ['cell phone', 'mobile phone', 'telephone', 'remote', 'cell']:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                    cv2.putText(frame, "PUT THE PHONE AWAY!", (x1-50, y1 - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                    self.phone_detected = True
+                else:
+                    self.phone_detected = False
+                    
 
             #Visualize the landmarks on image
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
             detection_result = self.extractor.detector.detect(mp_image)
             
             prediction_dict = {0:"Focused", 1:"Focused", 2:"Distracted"}
+            
+            #Drawing the face mesh
             if detection_result.face_landmarks:
                 annotated_image = draw_landmarks_on_image(frame, detection_result)
                 #Display the current prediction

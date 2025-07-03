@@ -1,4 +1,3 @@
-
 """
 This file does the same as face_features.py in the features folder. This has been reorganized to a class to aid the real time detection:
 Descriptive comments can be found in the original file.
@@ -10,7 +9,6 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import numpy as np
 import os
-from tqdm import tqdm
 
 
 class xFeatures:
