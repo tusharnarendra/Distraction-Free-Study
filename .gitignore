@@ -3,3 +3,6 @@ raw_footage/
 ai-env/
 src/__pycache__/
 *.pyc
+screenshot_study_1.png
+screenshot_study_2.png
+csv_organizer.py

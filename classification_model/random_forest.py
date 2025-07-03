@@ -23,7 +23,7 @@ X_test = sc.transform(X_test)
 classifier = RandomForestClassifier(n_estimators = 100, criterion = 'entropy', random_state = 0)
 classifier.fit(X_train, y_train)
 
-#Generating predictions
+#Generate predictions
 y_pred = classifier.predict(X_test)
 print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
 
@@ -33,6 +33,6 @@ print(cm)
 accuracy_score(y_test, y_pred)
 print("Accuracy:", accuracy_score(y_test, y_pred))
 
-#Saving the regression model
+#Save the classification model
 joblib.dump(classifier, 'random_forest_model.pkl')
 joblib.dump(sc, 'X_scaler.pkl')

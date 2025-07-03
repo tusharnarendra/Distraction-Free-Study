@@ -5,7 +5,7 @@ from mediapipe.tasks.python import vision
 from mediapipe_visualization import draw_landmarks_on_image, plot_face_blendshapes_bar_graph
 import numpy as np
 import os
-from tqdm import tqdm  # <-- added
+from tqdm import tqdm 
 
 # Creating the face landmarker object
 base_options = python.BaseOptions(model_asset_path='face_landmarker.task')
